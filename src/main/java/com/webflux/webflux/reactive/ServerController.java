@@ -1,6 +1,6 @@
 package com.webflux.webflux.reactive;
 
-import com.webflux.webflux.Domain.Dish;
+import com.webflux.webflux.domain.Dish;
 import com.webflux.webflux.service.KitchenService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

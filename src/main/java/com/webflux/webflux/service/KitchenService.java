@@ -1,6 +1,6 @@
 package com.webflux.webflux.service;
 
-import com.webflux.webflux.Domain.Dish;
+import com.webflux.webflux.domain.Dish;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 

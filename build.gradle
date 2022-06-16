@@ -1,17 +1,31 @@
 plugins {
-	id 'org.springframework.boot' version '3.0.0-SNAPSHOT'
+	id 'org.springframework.boot' version '2.7.0'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id "org.asciidoctor.convert" version "1.5.9.2"
 	id 'java'
 }
 
 group = 'com.webflux'
-version = '0.0.1-SNAPSHOT'
+version = '1.0'
 sourceCompatibility = '17'
 
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+}
+
+// gradle 에서 프로젝트 관련 정보 info 에 뽑아내기
+springBoot {
+	buildInfo()
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('snippetsDir', file("build/generated-snippets"))
 }
 
 repositories {
@@ -21,15 +35,59 @@ repositories {
 }
 
 dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	implementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	annotationProcessor 'org.projectlombok:lombok'
+	compileOnly 'org.projectlombok:lombok'
+	implementation 'org.springframework.restdocs:spring-restdocs-webtestclient'
+	implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+
+	// 리액티브가 아닌 전통적인 몽고디비 드라이버
+	implementation 'org.mongodb:mongodb-driver-sync'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// 내장형 MongoDB 테스트DB
+	implementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo' // 내장형 몽고디비 도구 (테스트에서 주로 사용, 초기에 데이터 스토어로 사용함)
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
+
+	// Spring Security
+	// 컨트롤러에서 스프링 시큐리티 설정 애너테이션과 타입을 사용하기 위해 필요
+	//implementation 'org.springframework.security:spring-security-config'
+
+	// 우리가 만드는 애플리케이션 OAuth 클라이언트로서 OAuth 프로바이더와 통신할 때 필요
+	//implementation 'org.springframework.security:spring-security-oauth2-client'
+
+	// JOSE(Javascript Object Signing and Encryption)를 사용할 때 필요
+	//implementation 'org.springframework.security:spring-security-oauth2-jose'
+	//implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
+	//testImplementation 'org.springframework.security:spring-security-test'
+
+	// asciidoc
+	asciidoctor 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+
+	// blockhound를 사용한 블로킹 코드 검출 (브로킹 코드 소스 여부 확인)
+	testImplementation 'io.projectreactor.tools:blockhound:1.0.6.RELEASE'
+	testImplementation 'io.projectreactor.tools:blockhound-junit-platform:1.0.6.RELEASE' // 블록하운드 사용 단위 테스트
 }
 
-tasks.named('test') {
+
+test {
+	outputs.dir snippetsDir
 	useJUnitPlatform()
+}
+
+asciidoctor {
+	inputs.dir snippetsDir
+	dependsOn test
+}
+
+bootJar {
+	dependsOn asciidoctor
+	from ("${asciidoctor.outputDir}/html5") {
+		into 'static/docs'
+	}
 }
